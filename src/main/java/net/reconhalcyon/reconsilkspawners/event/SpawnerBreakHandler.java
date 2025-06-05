@@ -11,6 +11,8 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
@@ -24,30 +26,39 @@ public class SpawnerBreakHandler {
         BlockState state = event.getState();
         Player player = event.getPlayer();
 
-        if (!level.isClientSide && state.getBlock() == Blocks.SPAWNER && player != null) {
+        // Ensure server-side execution and correct block/player
+        if (!level.isClientSide && state.getBlock() == Blocks.SPAWNER) {
             ItemStack tool = player.getMainHandItem();
 
-            // NeoForge 1.21.1 registry access for enchantments
+            // Get registry and Silk Touch enchantment holder
             RegistryAccess registryAccess = level.registryAccess();
             var enchantmentRegistry = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
             Holder<Enchantment> silkTouch = enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH);
 
+            // Check if tool has Silk Touch
             if (tool.getEnchantmentLevel(silkTouch) > 0) {
-                // Cancel the normal drop
-                event.setCanceled(true);
+                BlockEntity blockEntity = level.getBlockEntity(pos);
 
-                // Destroy the block manually
-                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                if (blockEntity instanceof SpawnerBlockEntity spawnerBE) {
+                    // Cancel default block break behavior
+                    event.setCanceled(true);
 
-                // Drop the spawner item
-                ItemStack spawnerDrop = new ItemStack(Blocks.SPAWNER);
-                level.addFreshEntity(new ItemEntity(
-                        level,
-                        pos.getX() + 0.5,
-                        pos.getY() + 0.5,
-                        pos.getZ() + 0.5,
-                        spawnerDrop
-                ));
+                    // Remove block from world
+                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+
+                    // Create a new ItemStack for the spawner and embed NBT
+                    ItemStack spawnerDrop = new ItemStack(Blocks.SPAWNER);
+                    spawnerBE.saveToItem(spawnerDrop, registryAccess); // ✔️ Saves SpawnData correctly
+
+                    // Drop the customized spawner into the world
+                    level.addFreshEntity(new ItemEntity(
+                            level,
+                            pos.getX() + 0.5,
+                            pos.getY() + 0.5,
+                            pos.getZ() + 0.5,
+                            spawnerDrop
+                    ));
+                }
             }
         }
     }

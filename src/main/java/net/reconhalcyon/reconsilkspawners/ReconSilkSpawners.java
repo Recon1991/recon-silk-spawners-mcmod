@@ -1,13 +1,13 @@
 package net.reconhalcyon.reconsilkspawners;
 
 import net.reconhalcyon.reconsilkspawners.event.SpawnerBreakHandler;
+import net.reconhalcyon.reconsilkspawners.event.SpawnerPlaceHandler;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -48,6 +48,9 @@ public class ReconSilkSpawners
 
         // Register the SpawnerBreakHandler to handle spawner breaking events
         NeoForge.EVENT_BUS.register(SpawnerBreakHandler.class);
+        // Register the SpawnerPlaceHandler to handle spawner placement events
+        NeoForge.EVENT_BUS.register(SpawnerPlaceHandler.class);
+
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
