@@ -1,14 +1,10 @@
 package net.reconhalcyon.reconsilkspawners.event;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,6 +12,8 @@ import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+
+import static net.reconhalcyon.reconsilkspawners.util.ModUtils.hasSilkTouch;
 
 public class SpawnerBreakHandler {
 
@@ -32,11 +30,9 @@ public class SpawnerBreakHandler {
 
             // Get registry and Silk Touch enchantment holder
             RegistryAccess registryAccess = level.registryAccess();
-            var enchantmentRegistry = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
-            Holder<Enchantment> silkTouch = enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH);
 
             // Check if tool has Silk Touch
-            if (tool.getEnchantmentLevel(silkTouch) > 0) {
+            if (hasSilkTouch(player.getMainHandItem(), level.registryAccess())) {
                 BlockEntity blockEntity = level.getBlockEntity(pos);
 
                 if (blockEntity instanceof SpawnerBlockEntity spawnerBE) {
@@ -48,7 +44,7 @@ public class SpawnerBreakHandler {
 
                     // Create a new ItemStack for the spawner and embed NBT
                     ItemStack spawnerDrop = new ItemStack(Blocks.SPAWNER);
-                    spawnerBE.saveToItem(spawnerDrop, registryAccess); // ✔️ Saves SpawnData correctly
+                    spawnerBE.saveToItem(spawnerDrop, registryAccess);
 
                     // Drop the customized spawner into the world
                     level.addFreshEntity(new ItemEntity(

@@ -23,7 +23,7 @@ public class SpawnerPlaceHandler {
         BlockState state = event.getPlacedBlock();
 
         if (!level.isClientSide && state.getBlock() == Blocks.SPAWNER) {
-            if (!(event.getEntity() instanceof Player placer)) return; // ✅ Safe cast
+            if (!(event.getEntity() instanceof Player placer)) return;
 
             BlockEntity be = level.getBlockEntity(pos);
             if (!(be instanceof SpawnerBlockEntity)) return;
