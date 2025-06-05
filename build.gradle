@@ -212,7 +212,3 @@ idea {
         downloadJavadoc = true
     }
 }
-
-// Make sure reobfJar runs after build
-jar.finalizedBy('reobfJar')
-
