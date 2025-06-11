@@ -1,9 +1,5 @@
 package net.reconhalcyon.reconsilkspawners;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -12,52 +8,75 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-// An example config class. This is not required, but it's a good idea to have one to keep your config organized.
-// Demonstrates how to use Neo's config APIs
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @EventBusSubscriber(modid = ReconSilkSpawners.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
-public class Config
-{
+public class Config {
+
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    private static final ModConfigSpec.BooleanValue LOG_DIRT_BLOCK = BUILDER
-            .comment("Whether to log the dirt block on common setup")
-            .define("logDirtBlock", true);
+    // Core toggles
+    private static final ModConfigSpec.BooleanValue ENABLE_SILK_TOUCH_SPAWNERS = BUILDER
+            .comment("Allows Silk Touch harvesting of spawners")
+            .define("enableSilkTouchSpawners", true);
 
-    private static final ModConfigSpec.IntValue MAGIC_NUMBER = BUILDER
-            .comment("A magic number")
-            .defineInRange("magicNumber", 42, 0, Integer.MAX_VALUE);
+    private static final ModConfigSpec.BooleanValue ENABLE_SPAWNER_PLACEMENT = BUILDER
+            .comment("Allows placing spawners with NBT data")
+            .define("enableSpawnerPlacement", true);
 
-    public static final ModConfigSpec.ConfigValue<String> MAGIC_NUMBER_INTRODUCTION = BUILDER
-            .comment("What you want the introduction message to be for the magic number")
-            .define("magicNumberIntroduction", "The magic number is... ");
+    private static final ModConfigSpec.BooleanValue LOG_SPAWNER_DATA = BUILDER
+            .comment("Logs spawner data for debugging")
+            .define("logSpawnerData", false);
 
-    // a list of strings that are treated as resource locations for items
-    private static final ModConfigSpec.ConfigValue<List<? extends String>> ITEM_STRINGS = BUILDER
-            .comment("A list of items to log on common setup.")
-            .defineList("items", List.of("minecraft:iron_ingot"), Config::validateItemName);
+    // Dimension restrictions
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> RESTRICTED_PLACEMENT_DIMENSIONS = BUILDER
+            .comment("List of dimensions where spawner placement is restricted")
+            .defineList("restrictedPlacementDimensions",
+                    List.of("minecraft:the_nether", "minecraft:the_end"),
+                    obj -> obj instanceof String);
 
-    static final ModConfigSpec SPEC = BUILDER.build();
+    // Whitelist filtering
+    private static final ModConfigSpec.BooleanValue ENABLE_WHITELIST = BUILDER
+            .comment("Enable whitelist for allowed entities")
+            .define("enableWhitelist", false);
 
-    public static boolean logDirtBlock;
-    public static int magicNumber;
-    public static String magicNumberIntroduction;
-    public static Set<Item> items;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> WHITELIST_ENTITY_IDS = BUILDER
+            .comment("Entity IDs allowed for spawner harvesting and placement")
+            .defineList("whitelistEntityIds", List.of("minecraft:zombie"), obj -> obj instanceof String);
 
-    private static boolean validateItemName(final Object obj)
-    {
-        return obj instanceof String itemName && BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(itemName));
-    }
+    // Blacklist filtering
+    private static final ModConfigSpec.BooleanValue ENABLE_BLACKLIST = BUILDER
+            .comment("Enable blacklist for blocked entities")
+            .define("enableBlacklist", false);
+
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> BLACKLIST_ENTITY_IDS = BUILDER
+            .comment("Entity IDs blocked from spawner harvesting and placement")
+            .defineList("blacklistEntityIds", List.of("minecraft:warden"), obj -> obj instanceof String);
+
+    public static final ModConfigSpec SPEC = BUILDER.build();
+
+    // Loaded values
+    public static boolean enableSilkTouchSpawners;
+    public static boolean enableSpawnerPlacement;
+    public static boolean logSpawnerData;
+    public static Set<String> restrictedPlacementDimensions;
+    public static boolean enableWhitelist;
+    public static Set<String> whitelistEntityIds;
+    public static boolean enableBlacklist;
+    public static Set<String> blacklistEntityIds;
 
     @SubscribeEvent
-    static void onLoad(final ModConfigEvent event)
-    {
-        logDirtBlock = LOG_DIRT_BLOCK.get();
-        magicNumber = MAGIC_NUMBER.get();
-        magicNumberIntroduction = MAGIC_NUMBER_INTRODUCTION.get();
+    static void onLoad(final ModConfigEvent event) {
+        enableSilkTouchSpawners = ENABLE_SILK_TOUCH_SPAWNERS.get();
+        enableSpawnerPlacement = ENABLE_SPAWNER_PLACEMENT.get();
+        logSpawnerData = LOG_SPAWNER_DATA.get();
 
-        // convert the list of strings into a set of items
-        items = ITEM_STRINGS.get().stream()
-                .map(itemName -> BuiltInRegistries.ITEM.get(ResourceLocation.parse(itemName)))
-                .collect(Collectors.toSet());
+        restrictedPlacementDimensions = RESTRICTED_PLACEMENT_DIMENSIONS.get().stream().map(String::valueOf).collect(Collectors.toSet());
+        enableWhitelist = ENABLE_WHITELIST.get();
+        whitelistEntityIds = WHITELIST_ENTITY_IDS.get().stream().map(String::valueOf).collect(Collectors.toSet());
+        enableBlacklist = ENABLE_BLACKLIST.get();
+        blacklistEntityIds = BLACKLIST_ENTITY_IDS.get().stream().map(String::valueOf).collect(Collectors.toSet());
     }
 }
