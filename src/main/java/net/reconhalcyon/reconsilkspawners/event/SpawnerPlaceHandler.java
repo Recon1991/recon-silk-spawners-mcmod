@@ -13,6 +13,9 @@ import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.reconhalcyon.reconsilkspawners.Config;
+import net.reconhalcyon.reconsilkspawners.ReconSilkSpawners;
+import net.reconhalcyon.reconsilkspawners.util.SpawnerValidator;
 
 public class SpawnerPlaceHandler {
 
@@ -22,23 +25,50 @@ public class SpawnerPlaceHandler {
         BlockPos pos = event.getPos();
         BlockState state = event.getPlacedBlock();
 
-        if (!level.isClientSide && state.getBlock() == Blocks.SPAWNER) {
-            if (!(event.getEntity() instanceof Player placer)) return;
+        // Only care about spawner blocks
+        if (state.getBlock() != Blocks.SPAWNER) return;
 
-            BlockEntity be = level.getBlockEntity(pos);
-            if (!(be instanceof SpawnerBlockEntity)) return;
+        // Skip if placement is disabled
+        if (!Config.enableSpawnerPlacement) return;
 
-            ItemStack stack = placer.getMainHandItem();
-            CustomData customData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
-            if (customData != null) {
-                CompoundTag tag = customData.copyTag();
+        // Verify placer is a player (ignore Endermen, dispensers, etc)
+        if (!(event.getEntity() instanceof Player placer)) return;
 
-                BlockEntity loaded = SpawnerBlockEntity.loadStatic(pos, state, tag, level.registryAccess());
-                if (loaded instanceof SpawnerBlockEntity newSpawnerBE) {
-                    level.setBlockEntity(newSpawnerBE);
-                    newSpawnerBE.setChanged();
-                }
-            }
+        // Get placed BlockEntity
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof SpawnerBlockEntity)) return;
+
+        ItemStack stack = placer.getMainHandItem();
+        CustomData blockEntityData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+
+        if (blockEntityData == null) {
+            ReconSilkSpawners.LOGGER.warn("No BlockEntityTag found on placed spawner item.");
+            return;
+        }
+
+        CompoundTag blockEntityTag = blockEntityData.copyTag();
+        CompoundTag spawnData = blockEntityTag.getCompound("SpawnData");
+        String entityId = spawnData.getString("id");
+
+        // Dimension placement restriction
+        String dimensionId = level.dimension().location().toString();
+        if (Config.restrictedPlacementDimensions.contains(dimensionId)) {
+            ReconSilkSpawners.LOGGER.warn("Spawner placement blocked in restricted dimension: {}", dimensionId);
+            return;
+        }
+
+        // Whitelist/blacklist filtering
+        if (!SpawnerValidator.isEntityAllowed(entityId)) return;
+
+        if (Config.logSpawnerData) {
+            ReconSilkSpawners.LOGGER.info("Placing spawner for entity: {}", entityId);
+        }
+
+        // ✅ This is the key part: re-apply full NBT using loadStatic()
+        BlockEntity loaded = SpawnerBlockEntity.loadStatic(pos, state, blockEntityTag, level.registryAccess());
+        if (loaded instanceof SpawnerBlockEntity newSpawnerBE) {
+            level.setBlockEntity(newSpawnerBE);
+            newSpawnerBE.setChanged();
         }
     }
 }

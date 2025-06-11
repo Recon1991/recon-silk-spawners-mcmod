@@ -20,6 +20,7 @@ repositories {
     mavenCentral()
     maven { url = "https://maven.neoforged.net/releases" }
 
+    /*
     // FTB official maven (replaces maven.saps.dev)
     maven {
         url = "https://maven.ftb.dev/releases"
@@ -40,7 +41,7 @@ repositories {
         content {
             includeGroup "dev.architectury"
         }
-    }
+    }*/
 }
 
 base {
@@ -135,8 +136,8 @@ configurations {
 }
 
 dependencies {
-    compileOnly "dev.ftb.mods:ftb-chunks-neoforge:2101.1.9"
-    runtimeOnly "dev.ftb.mods:ftb-chunks-neoforge:2101.1.9"
+    // compileOnly "dev.ftb.mods:ftb-chunks-neoforge:2101.1.9"
+    // runtimeOnly "dev.ftb.mods:ftb-chunks-neoforge:2101.1.9"
 
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
