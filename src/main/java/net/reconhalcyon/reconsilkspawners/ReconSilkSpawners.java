@@ -1,6 +1,7 @@
 package net.reconhalcyon.reconsilkspawners;
 
 import net.reconhalcyon.reconsilkspawners.event.SpawnerBreakHandler;
+import net.reconhalcyon.reconsilkspawners.event.SpawnerEggHandler;
 import net.reconhalcyon.reconsilkspawners.event.SpawnerPlaceHandler;
 import org.slf4j.Logger;
 
@@ -39,7 +40,8 @@ public class ReconSilkSpawners
         NeoForge.EVENT_BUS.register(SpawnerBreakHandler.class);
         // ═══╬═══ Register the SpawnerPlaceHandler to handle spawner placement events ═══╬═══
         NeoForge.EVENT_BUS.register(SpawnerPlaceHandler.class);
-
+        // ═══╬═══ Register the SpawnerEggHandler to handle spawner egg usage events ═══╬═══
+        NeoForge.EVENT_BUS.register(SpawnerEggHandler.class);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
